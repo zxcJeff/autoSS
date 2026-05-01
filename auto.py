@@ -13,7 +13,8 @@ from playwright.sync_api import sync_playwright, TimeoutError
 
 cycle = 3200
 captureDelay = 7
-browserless = True if len(sys.argv) > 1 and sys.argv[1] == "False" else False
+
+browserless = len(sys.argv) > 1 and sys.argv[1].lower() == "true"
 
 def check_playwright():
     try:

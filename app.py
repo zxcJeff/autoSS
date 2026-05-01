@@ -4,15 +4,23 @@ import threading
 import requests
 import os
 import zipfile
+import sys
 
-GITHUB_OWNER = "asdJPasc"
-GITHUB_REPO = "AutoSS"
-CURRENT_VERSION = "1.1.3"
+GITHUB_OWNER = "zxcJeff"
+GITHUB_REPO = "autoSS"
+CURRENT_VERSION = "1.1.4"
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 window = tk.Tk()
 window.title("I51 | Autoss v{}".format(CURRENT_VERSION))
 window.geometry("270x250")
-window.iconbitmap(r"icoFile\icon.ico")
+
+try:
+    window.iconbitmap(os.path.join(SCRIPT_DIR, r"icoFile\icon.ico"))
+except:
+    pass
+
 window.resizable(False, False)
 window.config(bg="#2e2e2e")
 
@@ -20,12 +28,25 @@ process = None
 
 def run_script():
     global process
-    headless_mode = "True" if headless_var.get() else "False"
+    
+    auto_path = os.path.join(SCRIPT_DIR, "auto.py")
+    
+    if not os.path.exists(auto_path):
+        status_label.config(text="Error: auto.py not found!", fg="red")
+        return
+    
+    if headless_var.get():
+        headless_mode = "True"
+    else:
+        headless_mode = "False"
+    
     browser_on.config(state="disabled")
     browser_off.config(state="disabled")
     status_label.config(text="Script is running...", fg="green")
+    
     process_thread = threading.Thread(target=start_process, args=(headless_mode,))
     process_thread.start()
+    
     button_run.config(state="disabled")
     button_check_updates.config(state="disabled")
     button_stop.config(state="normal")
@@ -33,7 +54,11 @@ def run_script():
 def start_process(headless_mode):
     global process
     try:
-        process = subprocess.Popen(["python", "auto.py", headless_mode])
+        # Use absolute path to auto.py
+        auto_path = os.path.join(SCRIPT_DIR, "auto.py")
+        
+        # Pass the headless mode argument to auto.py
+        process = subprocess.Popen([sys.executable, auto_path, headless_mode])
         process.wait()
         status_label.config(text="Script has stopped", fg="red")
     except Exception as e:
@@ -87,7 +112,6 @@ def fetch_latest_release(url):
         status_label.config(text=f"Error: {str(e)}", fg="red")
 
 def compare_versions(latest_version, current_version):
-
     latest_version = latest_version.lstrip('v')
     current_version = current_version.lstrip('v')
     
@@ -120,7 +144,7 @@ def extract_file(file_path):
     try:
         if file_path.endswith(".zip"):
             with zipfile.ZipFile(file_path, "r") as zip_ref:
-                extract_to = os.getcwd()
+                extract_to = SCRIPT_DIR
 
                 for member in zip_ref.namelist():
                     if 'icoFile' in member:
@@ -133,21 +157,21 @@ def extract_file(file_path):
                         with open(extracted_path, "wb") as f_out:
                             f_out.write(zip_ref.read(member))
             
-            status_label.config(text="Update completed successfully.", fg="green")
+            status_label.config(text="Update completed successfully. Please restart the application.", fg="green")
             os.remove(file_path)
     except Exception as e:
         status_label.config(text=f"Error extracting the file: {str(e)}", fg="red")
 
 headless_var = tk.BooleanVar()
-headless_var.set(False)
+headless_var.set(False)  # Default to visible browser mode
 
 browser_frame = tk.Frame(window, bg="#2e2e2e")
 browser_frame.pack(pady=10)
 
-browser_on = tk.Radiobutton(browser_frame, text="Browser: On", variable=headless_var, value=True, bg="#2e2e2e", fg="white", selectcolor="#444444", indicatoron=0)
+browser_on = tk.Radiobutton(browser_frame, text="Browser: On", variable=headless_var, value=False, bg="#2e2e2e", fg="white", selectcolor="#444444", indicatoron=0)
 browser_on.pack(side="left", padx=5)
 
-browser_off = tk.Radiobutton(browser_frame, text="Browser: Off", variable=headless_var, value=False, bg="#2e2e2e", fg="white", selectcolor="#444444", indicatoron=0)
+browser_off = tk.Radiobutton(browser_frame, text="Headless Mode", variable=headless_var, value=True, bg="#2e2e2e", fg="white", selectcolor="#444444", indicatoron=0)
 browser_off.pack(side="left", padx=5)
 
 button_run = tk.Button(window, text="Run AutoSS", command=run_script, bg="#444444", fg="white")
