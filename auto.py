@@ -11,7 +11,7 @@ from colorama import Fore, init
 from datetime import datetime
 from playwright.sync_api import sync_playwright, TimeoutError
 
-cycle = 3200
+cycle = 1800
 captureDelay = 7
 
 browserless = len(sys.argv) > 1 and sys.argv[1].lower() == "true"
@@ -38,28 +38,19 @@ def detect_captcha(page):
     body_text = page.query_selector('body').text_content()
     return any(keyword in body_text for keyword in captcha_keywords)
 
-def click_if_visible(page, selectors):
-    accept_texts = ["Accept", 
-                    "I Accept", 
-                    "Agree", 
-                    "Save and Close", 
-                    "Accept additional cookies", 
-                    "Dismiss", "Yes, these cookies are OK", 
-                    "Prosseguir", "Accept all cookies", 
-                    "I understand and I accept the use of cookies", 
-                    "Accept all", "Aceptar", 
-                    "Aceptar y continuar", 
-                    "Accept All Cookies", "Hide this message"]
-    for selector in selectors:
-        for text in accept_texts:
-            elements = page.query_selector_all(selector)
-            for element in elements:
-                if element.is_visible():
-                    element_text = element.evaluate('(el) => el.textContent')
-                    if element_text and text in element_text:
-                        element.click()
-                        return True
-    return False
+def manual_cookie_handler(page, row_id, url):
+    """
+    Manual cookie handling - only used when Browser: On mode (NOT headless)
+    Waits for user to click cookie buttons manually
+    """
+    print(f"\n{Fore.YELLOW}[COOKIE] Manual cookie acceptance required for Row ID: {row_id:04}{Fore.RESET}")
+    print(f"{Fore.CYAN}   URL: {url}{Fore.RESET}")
+    print(f"{Fore.WHITE}   -> Please manually click any cookie accept buttons in the browser{Fore.RESET}")
+    
+    input(f"\n   {Fore.GREEN}Press Enter after you've accepted the cookies...{Fore.RESET}")
+    
+    print(f"   {Fore.GREEN}[OK] Continuing to screenshot...{Fore.RESET}\n")
+    return True
 
 def remove_elements(page):
     selectors_to_remove = ['header',
@@ -90,7 +81,7 @@ def create_date_folder():
     os.makedirs(current_date, exist_ok=True)
     return current_date
 
-def capture_full_page_screenshot(context, url, row_id, folder, extension):
+def capture_full_page_screenshot(context, url, row_id, folder, extension, is_manual_mode=False):
     page = context.new_page()
     page.goto(url)
     max_attempts = 3
@@ -99,17 +90,11 @@ def capture_full_page_screenshot(context, url, row_id, folder, extension):
     while attempt <= max_attempts:
         try:
             time.sleep(captureDelay)
+            
+            if is_manual_mode:
+                manual_cookie_handler(page, row_id, url)
+            
             remove_elements(page)
-            selectors = [
-                'button',
-                'button[type="button"]',
-                'a[text="Accept"]',
-                'button.accept-cookies',  
-                'button#accept-cookies',      
-                'button[data-cookie="accept"]',  
-                'button[aria-label="Accept Cookies"]'  
-            ] 
-            click_if_visible(page, selectors)
             
             # CUSTOM NAVIGATION BEFORE CAPTURING OF SCREENSHOT START #
 
@@ -147,7 +132,11 @@ def capture_full_page_screenshot(context, url, row_id, folder, extension):
             page.screenshot(path=screenshot_path, full_page=True)
 
             cmdTimestamp = datetime.now().strftime("%I:%M:%S %p")
-            print(f"{Fore.GREEN}Screenshot of row ID {Fore.WHITE}{row_id:04}{Fore.RESET} {Fore.GREEN}taken at {cmdTimestamp} has been saved.{Fore.RESET}")
+            
+            if is_manual_mode:
+                print(f"{Fore.GREEN}Screenshot of row ID {Fore.WHITE}{row_id:04}{Fore.RESET} {Fore.GREEN}taken at {cmdTimestamp} (cookies manually accepted){Fore.RESET}")
+            else:
+                print(f"{Fore.GREEN}Screenshot of row ID {Fore.WHITE}{row_id:04}{Fore.RESET} {Fore.GREEN}taken at {cmdTimestamp} has been saved.{Fore.RESET}")
             break
 
         except Exception as e:
@@ -176,8 +165,12 @@ def capture_full_page_screenshot(context, url, row_id, folder, extension):
     else:
         print(f"Page for row ID {row_id:04} is closed. It may have been reloaded or closed.")
              
-def process_excel_data(file_path):
+def process_excel_data(file_path, is_manual_mode=False):
     df = pd.read_excel(file_path)
+    
+    mode_text = "MANUAL (Browser: On)" if is_manual_mode else "HEADLESS (Browser: Off)"
+    print(f"{Fore.CYAN}[MODE] Running in: {mode_text}{Fore.RESET}\n")
+    
     with sync_playwright() as p:
 
         browser = p.firefox.launch_persistent_context (
@@ -193,7 +186,7 @@ def process_excel_data(file_path):
             extension = row['Extension']
 
             try:
-                capture_full_page_screenshot(browser, url, row_id, folder, extension)
+                capture_full_page_screenshot(browser, url, row_id, folder, extension, is_manual_mode)
             except Exception as e:
                 print(f"{Fore.RED}Error processing URL {url}: {e}. Skipping to the next URL...{Fore.RESET}")
                 continue
@@ -205,13 +198,26 @@ def main():
     check_playwright()
     cmd("I51 Auto Screenshot")
     excel_file_path = "agents.xlsx"
+    
+    is_manual_mode = not browserless
+    
+    if is_manual_mode:
+        print(f"{Fore.CYAN}{'='*70}{Fore.RESET}")
+        print(f"{Fore.YELLOW}MANUAL COOKIE MODE ENABLED{Fore.RESET}")
+        print(f"{Fore.CYAN}{'='*70}{Fore.RESET}")
+        print(f"{Fore.WHITE}You are in Browser: On mode.{Fore.RESET}")
+        print(f"{Fore.WHITE}For each website, you will need to manually click cookie buttons.{Fore.RESET}")
+        print(f"{Fore.WHITE}The script will wait for you to press Enter after clicking.{Fore.RESET}")
+        print(f"{Fore.RED}Note: The script cannot bypass CAPTCHAs. If one appears, please press Enter or click Skip to continue.{Fore.RESET}")
+        print(f"{Fore.CYAN}{'='*70}{Fore.RESET}\n")
+    
     try:
         cycle_count = 0
 
         while True:
             cycle_count += 1
             print(f"{Fore.WHITE}Starting cycle #{cycle_count}{Fore.RESET}\n")
-            process_excel_data(excel_file_path)
+            process_excel_data(excel_file_path, is_manual_mode)
             time.sleep(cycle)
     except KeyboardInterrupt:
         print("Script interrupted. Closing browser...")
