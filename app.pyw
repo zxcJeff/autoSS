@@ -345,7 +345,7 @@ main_frame = tk.Frame(window, bg="#1e1e1e")
 main_frame.pack(fill="both", expand=True, padx=20, pady=15)
 
 # Title
-title_label = tk.Label(main_frame, text="⚡ AUTO SS", font=("Segoe UI", 16, "bold"), 
+title_label = tk.Label(main_frame, text="⚡AUTO SS⚡", font=("Segoe UI", 16, "bold"), 
                        bg="#1e1e1e", fg="#ffffff")
 title_label.pack(pady=(0, 10))
 
