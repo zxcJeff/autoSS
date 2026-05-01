@@ -2,7 +2,7 @@
 # I51 AutoSS Script
 ## Author
 
-- [@asdJPasc / I51](https://github.com/asdJPasc)
+- [@zxcJeff / I51](https://github.com/zxcJeff)
 
 This script automates the task of capturing full-page screenshots of multiple web pages listed in an Excel file. It utilizes the power of Python and the Playwright library to navigate through websites, remove unwanted elements, and capture comprehensive screenshots, providing users with a visual snapshot of each webpage.
 
