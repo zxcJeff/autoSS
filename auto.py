@@ -8,7 +8,7 @@ import time
 import playwright
 import pandas as pd
 from colorama import Fore, init
-from datetime import datetime
+from datetime import datetime, timedelta
 from playwright.sync_api import sync_playwright, TimeoutError
 
 cycle = 1800
@@ -39,10 +39,6 @@ def detect_captcha(page):
     return any(keyword in body_text for keyword in captcha_keywords)
 
 def manual_cookie_handler(page, row_id, url):
-    """
-    Manual cookie handling - only used when Browser: On mode (NOT headless)
-    Waits for user to click cookie buttons manually
-    """
     print(f"\n{Fore.YELLOW}[COOKIE] Manual cookie acceptance required for Row ID: {row_id:04}{Fore.RESET}")
     print(f"{Fore.CYAN}   URL: {url}{Fore.RESET}")
     print(f"{Fore.WHITE}   -> Please manually click any cookie accept buttons in the browser{Fore.RESET}")
@@ -81,6 +77,85 @@ def create_date_folder():
     os.makedirs(current_date, exist_ok=True)
     return current_date
 
+def handle_bcb_date_range(page, url):
+    if "bcb.gov.br/estabilidadefinanceira/buscanormas" in url:
+        print(f"{Fore.CYAN}[BCB] Detected BCB website - updating date range...{Fore.RESET}")
+        
+        try:
+            # Wait for page to load
+            page.wait_for_load_state('networkidle')
+            time.sleep(2)
+            
+            # Get current date and date 2 days before
+            current_date = datetime.now()
+            start_date_obj = current_date - timedelta(days=2)
+            end_date = current_date.strftime("%d/%m/%Y")
+            start_date = start_date_obj.strftime("%d/%m/%Y")
+            
+            print(f"{Fore.CYAN}[BCB] Start date: {start_date} (2 days ago){Fore.RESET}")
+            print(f"{Fore.CYAN}[BCB] End date: {end_date} (today){Fore.RESET}")
+            
+            # Find date input fields - common selectors for BCB
+            date_inputs = page.query_selector_all('input[type="text"]')
+            
+            # Try to find date range inputs
+            found_start = False
+            found_end = False
+            
+            for input_elem in date_inputs:
+                input_id = input_elem.get_attribute('id') or ''
+                input_name = input_elem.get_attribute('name') or ''
+                input_placeholder = input_elem.get_attribute('placeholder') or ''
+                
+                # Check if this is the start date field
+                if 'dataInicio' in input_id or 'dataInicio' in input_name or 'inicio' in input_placeholder.lower():
+                    # Clear existing value and fill with new start date
+                    input_elem.fill('')
+                    input_elem.fill(start_date)
+                    found_start = True
+                    print(f"{Fore.GREEN}[BCB] Set start date to: {start_date}{Fore.RESET}")
+                
+                # Check if this is the end date field
+                if 'dataFim' in input_id or 'dataFim' in input_name or 'fim' in input_placeholder.lower():
+                    # Clear existing value and fill with new end date
+                    input_elem.fill('')
+                    input_elem.fill(end_date)
+                    found_end = True
+                    print(f"{Fore.GREEN}[BCB] Set end date to: {end_date}{Fore.RESET}")
+            
+            # Alternative: try to find by specific labels or structure
+            if not found_start or not found_end:
+                # Look for datepicker elements
+                datepickers = page.query_selector_all('.datepicker, .has-datepicker')
+                if len(datepickers) >= 2:
+                    datepickers[0].fill('')
+                    datepickers[0].fill(start_date)
+                    datepickers[1].fill('')
+                    datepickers[1].fill(end_date)
+                    print(f"{Fore.GREEN}[BCB] Set dates using datepicker elements{Fore.RESET}")
+                    found_start = True
+                    found_end = True
+            
+            if not found_start:
+                print(f"{Fore.YELLOW}[BCB] Warning: Could not find start date field{Fore.RESET}")
+            if not found_end:
+                print(f"{Fore.YELLOW}[BCB] Warning: Could not find end date field{Fore.RESET}")
+            
+            # Click search/apply button if exists
+            search_buttons = page.query_selector_all('button[type="submit"], input[type="submit"], .btn-primary, .btn-search')
+            for button in search_buttons:
+                if button.is_visible():
+                    button.click()
+                    print(f"{Fore.GREEN}[BCB] Clicked search/apply button{Fore.RESET}")
+                    page.wait_for_load_state('networkidle')
+                    time.sleep(3)
+                    break
+                    
+        except Exception as e:
+            print(f"{Fore.YELLOW}[BCB] Warning: Could not update date range - {e}{Fore.RESET}")
+    
+    return page
+
 def capture_full_page_screenshot(context, url, row_id, folder, extension, is_manual_mode=False):
     page = context.new_page()
     page.goto(url)
@@ -97,6 +172,10 @@ def capture_full_page_screenshot(context, url, row_id, folder, extension, is_man
             remove_elements(page)
             
             # CUSTOM NAVIGATION BEFORE CAPTURING OF SCREENSHOT START #
+            
+            # Handle BCB date range if applicable
+            if "bcb.gov.br/estabilidadefinanceira/buscanormas" in url:
+                page = handle_bcb_date_range(page, url)
 
             locators = [
                 '#main > div > div:nth-child(1) > div > div > div > div > div.main-col > ul > li:nth-child(1) > a',  #legifrance.fov
