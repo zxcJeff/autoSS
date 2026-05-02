@@ -35,14 +35,15 @@ These limitations are being actively addressed by the developer to enhance the s
 ## How to Use:
 Notes: Ensure you have latest Python installed:
 
-- Download the script [HERE](https://github.com/asdJPasc/AutoSS/archive/refs/heads/master.zip)
-- Extract the downloaded ZIP file to your desktop.
-- Open the extracted folder named "AutoSS-master".
-- Inside the folder, locate and double-click on the "install.py" file.
-- Open the "agent.xlxs" file using Microsoft Excel or a compatible spreadsheet program.
-- In the spreadsheet, set the URLs, RowID, Folder, and Extension.
-- Save the "agent.xlxs" file after configuring the settings.
-- Return to the folder containing the script and the "agents.xlxs" file.
-- Run the script by double-clicking the auto.py.
+- Download the script from [HERE](https://github.com/asdJPasc/AutoSS/archive/refs/heads/master.zip)
+Extract the downloaded ZIP file to your desktop.
+
+- Open the extracted folder named autoSS-main.
+- Inside the folder, locate and double-click the install file, then wait for the process to complete.
+- Open the agent.xlsx file using Microsoft Excel or a compatible spreadsheet program.
+- In the spreadsheet, configure the following fields: URLs, RowID, Folder, and Extension.
+- Save the agent.xlsx file after making your changes.
+- Return to the folder containing the script and the agent.xlsx file.
+- Run the script by double-clicking app.py.
 
 
