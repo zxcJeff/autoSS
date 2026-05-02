@@ -12,7 +12,7 @@ import re
 
 GITHUB_OWNER = "zxcJeff"
 GITHUB_REPO = "autoSS"
-CURRENT_VERSION = "1.1.6"
+CURRENT_VERSION = "1.1.7"
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
