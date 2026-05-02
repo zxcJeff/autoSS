@@ -35,7 +35,7 @@ These limitations are being actively addressed by the developer to enhance the s
 ## How to Use:
 Notes: Ensure you have latest Python installed:
 
-- Download the script from [HERE]([https://github.com/zxcJeff/AutoSS/archive/refs/heads/master.zip]).
+- Download the script from [HERE](https://github.com/zxcJeff/AutoSS/archive/refs/heads/master.zip).
 - Extract the downloaded ZIP file to your desktop.
 - Open the extracted folder named autoSS-main.
 - Inside the folder, locate and double-click the install file, then wait for the process to complete.
