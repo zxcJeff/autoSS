@@ -1,5 +1,5 @@
 
-# I51 AutoSS Script
+# I51 AutoSS Python Script
 ## Author
 
 - [@zxcJeff / I51](https://github.com/zxcJeff) || Jefferson Pascual
