@@ -1,4 +1,4 @@
-//I51 / JEFFERSON PASCUAL || FOR TESTING AND QC
+#I51 / JEFFERSON PASCUAL || FOR TESTING AND QC
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 import subprocess
