@@ -1,3 +1,4 @@
+//I51 / JEFFERSON PASCUAL || FOR TESTING AND QC
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 import subprocess
@@ -11,8 +12,8 @@ import time
 import re
 
 GITHUB_OWNER = "zxcJeff"
-GITHUB_REPO = "autoSS"
-CURRENT_VERSION = "1.1.7"
+GITHUB_REPO = "autoSS App v1.1.8"
+CURRENT_VERSION = "1.1.8"
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
