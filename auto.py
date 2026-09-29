@@ -1,4 +1,4 @@
-#I51/JPascual
+#I51/JPascual || FOR TESTING and QC
 import subprocess
 import os
 import sys
