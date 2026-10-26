@@ -1,4 +1,5 @@
 #I51/JPascual || Updated
+#NOTE ALL IDLE TIME INCREASE TO 5
 import subprocess
 import os
 import sys
@@ -149,7 +150,7 @@ def handle_bcb_date_range(page, url):
                     button.click()
                     print(f"{Fore.GREEN}[BCB] Clicked search/apply button{Fore.RESET}")
                     page.wait_for_load_state('networkidle')
-                    time.sleep(3)
+                    time.sleep(5)
                     break
                     
         except Exception as e:
