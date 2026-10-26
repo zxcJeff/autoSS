@@ -1,4 +1,4 @@
-#I51/JPascual || FOR TESTING and QC
+#I51/JPascual || Updated
 import subprocess
 import os
 import sys
@@ -11,6 +11,7 @@ from colorama import Fore, init
 from datetime import datetime, timedelta
 from playwright.sync_api import sync_playwright, TimeoutError
 
+#change to 2400 milli
 cycle = 1800
 captureDelay = 7
 
